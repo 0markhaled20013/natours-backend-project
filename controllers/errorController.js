@@ -1,6 +1,15 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 
+let AppError = require('../utils/appError');
+
+// Function to handle specific Mongoose errors (e.g., invalid IDs)
+let handleCastErrorDB = (err) => {
+  // Handle Mongoose "CastError" (invalid ID format, etc.)
+  let message = `Invalid ${err.path}: ${err.value}.`;
+  return new AppError(message, 400);
+};
+
 // Function to send detailed error response in DEVELOPMENT environment
 let sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -50,5 +59,10 @@ module.exports = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     // In production, send only safe error messages
     sendErrorProd(err, res);
+
+    // Create a copy of the error object to avoid mutating the original
+    let error = { ...err };
+    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    sendErrorProd(error, res);
   }
 };
