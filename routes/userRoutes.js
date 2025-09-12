@@ -1,6 +1,7 @@
 let express = require('express');
 let router = express.Router();
 const authController = require('../controllers/authController');
+
 let {
   getAllUsers,
   createUser,
@@ -10,7 +11,18 @@ let {
 } = require('../controllers/userController');
 
 router.post('/signup', authController.signup);
-router.route('/').get(getAllUsers).post(createUser);
-router.route('/:id').get(getUser).post(updateUser).delete(deleteUser);
+router.post('/login', authController.login);
+router.post('/forgetPassword', authController.login);
+router.post('/resetPassword', authController.login);
+router.route('/').get(authController.protect, getAllUsers).post(createUser);
+router
+  .route('/:id') // ex: /api/v1/users/234234
+  .get(getUser)
+  .post(updateUser)
+  .delete(
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    deleteUser
+  );
 
 module.exports = router;
